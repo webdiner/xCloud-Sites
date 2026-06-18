@@ -63,4 +63,8 @@ Resources/Info.plist           bundle metadata template
 build.sh                       compile + assemble + sign the .app
 ```
 
+## License
+
+[MIT](LICENSE).
+
 > Unofficial third-party client. Not affiliated with xCloud.
