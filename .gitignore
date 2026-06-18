@@ -1,0 +1,11 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Build output (distributed via GitHub Releases, not committed)
+dist/
+
+# macOS
+.DS_Store
+*.xcuserstate
