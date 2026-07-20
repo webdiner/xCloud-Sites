@@ -14,6 +14,13 @@ final class AppState: ObservableObject {
     /// Transient error shown after a failed magic-login attempt.
     @Published var loginError: String?
 
+    /// UUIDs of sites whose cache is currently being purged.
+    @Published var clearingCache: Set<String> = []
+    /// UUIDs recently cleared — drives a brief ✓ on the button.
+    @Published var cacheCleared: Set<String> = []
+    /// Transient error shown after a failed cache purge.
+    @Published var cacheError: String?
+
     var hasToken: Bool { !token.isEmpty }
 
     init() {
@@ -72,6 +79,23 @@ final class AppState: ObservableObject {
             NSWorkspace.shared.open(url)
         } catch {
             loginError = "\(site.displayName): " +
+                ((error as? APIError)?.errorDescription ?? error.localizedDescription)
+        }
+    }
+
+    func clearCache(_ site: Site) async {
+        guard !clearingCache.contains(site.uuid) else { return }
+        clearingCache.insert(site.uuid)
+        cacheError = nil
+        defer { clearingCache.remove(site.uuid) }
+        do {
+            try await APIClient(token: token).purgeCache(siteUUID: site.uuid)
+            cacheCleared.insert(site.uuid)
+            // Clear the ✓ after a moment.
+            try? await Task.sleep(nanoseconds: 1_800_000_000)
+            cacheCleared.remove(site.uuid)
+        } catch {
+            cacheError = "\(site.displayName): " +
                 ((error as? APIError)?.errorDescription ?? error.localizedDescription)
         }
     }

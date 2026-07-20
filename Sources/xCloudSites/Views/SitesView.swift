@@ -18,6 +18,13 @@ struct SitesView: View {
         } message: {
             Text(state.loginError ?? "")
         }
+        .alert("Cache purge failed",
+               isPresented: Binding(get: { state.cacheError != nil },
+                                    set: { if !$0 { state.cacheError = nil } })) {
+            Button("OK", role: .cancel) { state.cacheError = nil }
+        } message: {
+            Text(state.cacheError ?? "")
+        }
     }
 
     private var header: some View {
@@ -134,6 +141,7 @@ struct SiteRow: View {
             }
 
             if site.isWordPress {
+                cacheButton
                 magicLoginButton
             } else {
                 Text("Not WP")
@@ -144,6 +152,31 @@ struct SiteRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 5)
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var cacheButton: some View {
+        let busy = state.clearingCache.contains(site.uuid)
+        let done = state.cacheCleared.contains(site.uuid)
+        Button {
+            Task { await state.clearCache(site) }
+        } label: {
+            Group {
+                if busy {
+                    ProgressView().controlSize(.mini)
+                } else if done {
+                    Image(systemName: "checkmark").foregroundStyle(.green)
+                } else {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                }
+            }
+            .font(.system(size: 11))
+            .frame(width: 20, height: 15)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .disabled(busy)
+        .help("Clear this site's cache (full-page + object caches)")
     }
 
     @ViewBuilder

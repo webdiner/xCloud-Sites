@@ -118,4 +118,11 @@ struct APIClient {
         }
         return url
     }
+
+    /// Clears the site's caches: full-page (LiteSpeed) + object/Redis/Cloudflare-edge.
+    /// Both endpoints return 202; a failure on either is surfaced to the caller.
+    func purgeCache(siteUUID: String) async throws {
+        _ = try await send(makeRequest("POST", "sites/\(siteUUID)/cache/purge", body: Data("{}".utf8)))
+        _ = try await send(makeRequest("POST", "sites/\(siteUUID)/cache/purge-all", body: Data("{}".utf8)))
+    }
 }
